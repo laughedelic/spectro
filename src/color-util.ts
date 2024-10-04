@@ -1,4 +1,4 @@
-import { clamp, lerp, inverseLerp } from './math-util';
+import { clamp, inverseLerp, lerp } from './math-util';
 
 export type Gradient = {
     stop: number;
@@ -124,7 +124,7 @@ export function labToRgb(l: number, a: number, b: number): [number, number, numb
     return [lR, lG, lB].map((u) => Math.floor(clamp(256 * addGamma(u), 0, 255))) as [
         number,
         number,
-        number
+        number,
     ];
 }
 
@@ -144,16 +144,15 @@ export function colorRamp(x: number, gradient: Gradient): [number, number, numbe
         }
     }
 
-    const t =
-        startIdx === endIdx
-            ? 0
-            : inverseLerp(gradient[startIdx].stop, gradient[endIdx].stop, clamp(x, 0, 1));
+    const t = startIdx === endIdx
+        ? 0
+        : inverseLerp(gradient[startIdx].stop, gradient[endIdx].stop, clamp(x, 0, 1));
     const start = rgbToLab(...gradient[startIdx].color);
     const end = rgbToLab(...gradient[endIdx].color);
     const ease = (u: number) => (u < 0.5 ? 2 * u * u : -1 + (4 - 2 * u) * u);
     return labToRgb(
         lerp(start[0], end[0], ease(t)),
         lerp(start[1], end[1], ease(t)),
-        lerp(start[2], end[2], ease(t))
+        lerp(start[2], end[2], ease(t)),
     );
 }

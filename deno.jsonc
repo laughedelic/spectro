@@ -1,0 +1,17 @@
+{
+  "tasks": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
+  "imports": {
+    "vite": "npm:vite@^5.4.8",
+    "@vitejs/plugin-react": "npm:@vitejs/plugin-react@^4.3.2"
+  },
+  "fmt": {
+    // "semiColons": false,
+    // for compatibility with previous formatting:
+    "lineWidth": 100,
+    "indentWidth": 4,
+    "singleQuote": true,
+  }
+}
