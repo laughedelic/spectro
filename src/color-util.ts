@@ -1,4 +1,4 @@
-import { clamp, inverseLerp, lerp } from './math-util';
+import { clamp, inverseLerp, lerp } from './math-util.ts';
 
 export type Gradient = {
     stop: number;

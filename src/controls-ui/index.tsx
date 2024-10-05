@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { RenderParameters } from '../spectrogram-render';
+import { RenderParameters } from "../spectrogram-render.ts";
 
-import generateSettingsContainer from './SettingsContainer';
+import generateSettingsContainer from "./SettingsContainer.tsx";
 
 export default function initialiseControlsUi(
     container: Element,

@@ -1,6 +1,7 @@
+// @ts-types="./types/jsfft.d.ts"
 import { FFT } from 'jsfft';
 
-import { blackmanHarris, hzToMel, inverseLerp, lerp, melToHz } from './math-util';
+import { blackmanHarris, hzToMel, inverseLerp, lerp, melToHz } from './math-util.ts';
 
 export type Scale = 'linear' | 'mel';
 
@@ -30,7 +31,7 @@ function generateSpectrogramForSingleFrame(
     maxFrequencyHz: number,
     sampleRate: number,
     scale: Scale,
-    scaleSize: number
+    scaleSize: number,
 ) {
     // Apply a Blackman-Harris windowing function to the input
     for (let i = 0; i < windowSamples.length; i += 1) {
@@ -48,7 +49,11 @@ function generateSpectrogramForSingleFrame(
                 break;
             }
             case 'mel': {
-                const mel = lerp(hzToMel(minFrequencyHz), hzToMel(maxFrequencyHz), scaleAmount);
+                const mel = lerp(
+                    hzToMel(minFrequencyHz),
+                    hzToMel(maxFrequencyHz),
+                    scaleAmount,
+                );
                 n = (melToHz(mel) * windowSamples.length) / sampleRate;
                 break;
             }
@@ -59,12 +64,11 @@ function generateSpectrogramForSingleFrame(
         const lowerN = Math.floor(n);
         const upperN = Math.ceil(n);
 
-        const amplitude =
-            lerp(
-                Math.sqrt(fft.real[lowerN] ** 2 + fft.imag[lowerN] ** 2),
-                Math.sqrt(fft.real[upperN] ** 2 + fft.imag[upperN] ** 2),
-                n - lowerN
-            ) / Math.sqrt(windowSamples.length);
+        const amplitude = lerp(
+            Math.sqrt(fft.real[lowerN] ** 2 + fft.imag[lowerN] ** 2),
+            Math.sqrt(fft.real[upperN] ** 2 + fft.imag[upperN] ** 2),
+            n - lowerN,
+        ) / Math.sqrt(windowSamples.length);
 
         resultBuffer[resultBufferIndex + j] = amplitude;
     }
@@ -84,7 +88,7 @@ export function generateSpectrogram(
         sampleRate, // Sample rate of the audio
         scale = 'linear', // Scale of the returned spectrogram (can be 'linear' or 'mel')
         scaleSize, // Number of rows in the returned spectrogram
-    }: SpectrogramOptions
+    }: SpectrogramOptions,
 ): SpectrogramResult {
     if (minFrequencyHz === undefined) {
         minFrequencyHz = 0;
@@ -96,11 +100,13 @@ export function generateSpectrogram(
         scaleSize = windowSize / 2;
     }
     if (windowSize % windowStepSize !== 0) {
-        throw new Error('Window step size must be evenly divisible by the window size');
+        throw new Error(
+            'Window step size must be evenly divisible by the window size',
+        );
     }
 
-    let numWindows =
-        Math.ceil(samplesLength / windowStepSize) - Math.floor(windowSize / windowStepSize) + 1;
+    let numWindows = Math.ceil(samplesLength / windowStepSize) -
+        Math.floor(windowSize / windowStepSize) + 1;
     let startIdx = samplesStart;
     if (isStart || isEnd) {
         const additionalWindows = Math.floor(windowSize / windowStepSize) - 1;
@@ -123,7 +129,10 @@ export function generateSpectrogram(
     ) {
         for (let j = 0; j < windowSize; j += 1) {
             const sampleIdx = i + j;
-            if (sampleIdx < samplesStart || sampleIdx >= samplesStart + samplesLength) {
+            if (
+                sampleIdx < samplesStart ||
+                sampleIdx >= samplesStart + samplesLength
+            ) {
                 windowSamples[j] = 0;
             } else {
                 windowSamples[j] = samples[sampleIdx];
@@ -138,7 +147,7 @@ export function generateSpectrogram(
             maxFrequencyHz,
             sampleRate,
             scale,
-            scaleSize
+            scaleSize,
         );
     }
 

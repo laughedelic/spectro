@@ -1,11 +1,14 @@
-import { generateSpectrogram } from '../spectrogram';
+/// <reference no-default-lib="true" />
+/// <reference lib="deno.worker" />
+
+import { generateSpectrogram } from "../spectrogram.ts";
 import {
     ACTION_COMPUTE_SPECTROGRAM,
     ComputeSpectrogramMessage,
     Message,
-} from '../worker-constants';
+} from "../worker-constants.ts";
 
-self.addEventListener('message', (event: { data: Message['request'] }) => {
+self.addEventListener("message", (event: { data: Message["request"] }) => {
     const {
         data: { action, payload },
     } = event;
@@ -17,7 +20,7 @@ self.addEventListener('message', (event: { data: Message['request'] }) => {
                 samplesStart,
                 samplesLength,
                 options,
-            } = payload as ComputeSpectrogramMessage['request']['payload'];
+            } = payload as ComputeSpectrogramMessage["request"]["payload"];
 
             try {
                 const samples = new Float32Array(samplesBuffer);
@@ -25,9 +28,14 @@ self.addEventListener('message', (event: { data: Message['request'] }) => {
                     windowCount: spectrogramWindowCount,
                     options: spectrogramOptions,
                     spectrogram,
-                } = generateSpectrogram(samples, samplesStart, samplesLength, options);
+                } = generateSpectrogram(
+                    samples,
+                    samplesStart,
+                    samplesLength,
+                    options,
+                );
 
-                const response: ComputeSpectrogramMessage['response'] = {
+                const response: ComputeSpectrogramMessage["response"] = {
                     payload: {
                         spectrogramWindowCount,
                         spectrogramOptions,
@@ -35,9 +43,14 @@ self.addEventListener('message', (event: { data: Message['request'] }) => {
                         inputBuffer: samples.buffer,
                     },
                 };
-                self.postMessage(response, [spectrogram.buffer, samples.buffer]);
+                self.postMessage(response, [
+                    spectrogram.buffer,
+                    samples.buffer,
+                ]);
             } catch (error) {
-                const response: ComputeSpectrogramMessage['response'] = { error };
+                const response: ComputeSpectrogramMessage["response"] = {
+                    error,
+                };
                 self.postMessage(response);
             }
 
@@ -45,7 +58,7 @@ self.addEventListener('message', (event: { data: Message['request'] }) => {
         }
         default:
             self.postMessage({
-                error: new Error('Unknown action'),
+                error: new Error("Unknown action"),
             });
             break;
     }

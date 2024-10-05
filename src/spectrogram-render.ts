@@ -1,8 +1,11 @@
-import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from './color-util';
-import { Circular2DBuffer, lerp } from './math-util';
-import FragmentShader from './shaders/fragment.glsl';
-import VertexShader from './shaders/vertex.glsl';
-import { Scale } from './spectrogram';
+// @ts-types="vite-plugin-glsl/ext.d.ts"
+import FragmentShader from './shaders/fragment.glsl?raw';
+// @ts-types="vite-plugin-glsl/ext.d.ts"
+import VertexShader from './shaders/vertex.glsl?raw';
+
+import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from './color-util.ts';
+import { Circular2DBuffer, lerp } from './math-util.ts';
+import { Scale } from './spectrogram.ts';
 
 export interface RenderParameters {
     contrast: number;
@@ -19,7 +22,7 @@ export interface RenderParameters {
 function merge<T>(
     newValue: T | undefined | null,
     oldValue: T | undefined | null,
-    defaultValue: T
+    defaultValue: T,
 ): T {
     if (newValue !== undefined && newValue !== null) {
         return newValue;
@@ -112,47 +115,20 @@ export class SpectrogramGPURenderer {
             throw new Error('OES_texture_float_linear extension is not supported');
         }
 
-        const program = this.loadProgram(VertexShader.sourceCode, FragmentShader.sourceCode);
+        const program = this.loadProgram(VertexShader, FragmentShader);
         this.program = {
             program,
             positionAttribute: this.ctx.getAttribLocation(program, 'aVertexPos'),
             texCoordAttribute: this.ctx.getAttribLocation(program, 'aVertexTexCoord'),
-            spectrogramSamplerUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uSpectrogramSampler.variableName
-            ),
-            scaleSamplerUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uScaleSampler.variableName
-            ),
-            gradientSamplerUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uGradientSampler.variableName
-            ),
-            spectrogramOffsetUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uSpectrogramOffset.variableName
-            ),
-            spectrogramLengthUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uSpectrogramLength.variableName
-            ),
-            scaleRangeUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uScaleRange.variableName
-            ),
-            contrastUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uContrast.variableName
-            ),
-            sensitivityUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uSensitivity.variableName
-            ),
-            zoomUniform: this.getUniformLocation(
-                program,
-                FragmentShader.uniforms.uZoom.variableName
-            ),
+            spectrogramSamplerUniform: this.getUniformLocation(program, 'uSpectrogramSampler'),
+            scaleSamplerUniform: this.getUniformLocation(program, 'uScaleSampler'),
+            gradientSamplerUniform: this.getUniformLocation(program, 'uGradientSampler'),
+            spectrogramOffsetUniform: this.getUniformLocation(program, 'uSpectrogramOffset'),
+            spectrogramLengthUniform: this.getUniformLocation(program, 'uSpectrogramLength'),
+            scaleRangeUniform: this.getUniformLocation(program, 'uScaleRange'),
+            contrastUniform: this.getUniformLocation(program, 'uContrast'),
+            sensitivityUniform: this.getUniformLocation(program, 'uSensitivity'),
+            zoomUniform: this.getUniformLocation(program, 'uZoom'),
         };
 
         const [vertexBuffer, indexBuffer] = this.createFullscreenQuad();
@@ -166,7 +142,7 @@ export class SpectrogramGPURenderer {
         // Store the spectrogram in the reverse orientation for faster updates
         this.spectrogramTexture = this.createSpectrogramTexture(
             spectrogramHeight,
-            spectrogramWidth
+            spectrogramWidth,
         );
 
         this.updateParameters({});
@@ -185,7 +161,7 @@ export class SpectrogramGPURenderer {
             this.ctx.FLOAT,
             false,
             16,
-            0
+            0,
         );
         this.ctx.enableVertexAttribArray(this.program.positionAttribute);
         this.ctx.vertexAttribPointer(
@@ -194,7 +170,7 @@ export class SpectrogramGPURenderer {
             this.ctx.FLOAT,
             false,
             16,
-            8
+            8,
         );
         this.ctx.enableVertexAttribArray(this.program.texCoordAttribute);
 
@@ -212,7 +188,7 @@ export class SpectrogramGPURenderer {
         this.currentContrast = stepTowards(
             this.currentContrast,
             this.parameters!.contrast,
-            LERP_AMOUNT
+            LERP_AMOUNT,
         );
         // Don't interpolate the contrast when it gets close toe 0 to avoid numerical instability in
         // the shader
@@ -222,7 +198,7 @@ export class SpectrogramGPURenderer {
         this.currentSensitivity = stepTowards(
             this.currentSensitivity,
             this.parameters!.sensitivity,
-            LERP_AMOUNT
+            LERP_AMOUNT,
         );
         this.currentZoom = stepTowards(this.currentZoom, this.parameters!.zoom, LERP_AMOUNT);
         this.ctx.uniform2fv(this.program.scaleRangeUniform, this.currentScaleRange);
@@ -230,7 +206,7 @@ export class SpectrogramGPURenderer {
         this.ctx.uniform1f(this.program.sensitivityUniform, this.currentSensitivity);
         this.ctx.uniform1f(
             this.program.zoomUniform,
-            this.resizeHandlerZoomOverride * this.currentZoom
+            this.resizeHandlerZoomOverride * this.currentZoom,
         );
 
         this.ctx.activeTexture(this.ctx.TEXTURE0);
@@ -273,7 +249,7 @@ export class SpectrogramGPURenderer {
             maxFrequencyHz: merge(
                 parameters.maxFrequencyHz,
                 this.parameters?.maxFrequencyHz,
-                12000
+                12000,
             ),
             sampleRate: merge(parameters.sampleRate, this.parameters?.sampleRate, 48000),
             windowSize: merge(parameters.windowSize, this.parameters?.windowSize, 4096),
@@ -298,7 +274,7 @@ export class SpectrogramGPURenderer {
                 newParameters.minFrequencyHz,
                 newParameters.maxFrequencyHz,
                 newParameters.sampleRate,
-                newParameters.windowSize
+                newParameters.windowSize,
             );
         }
 
@@ -311,7 +287,7 @@ export class SpectrogramGPURenderer {
             this.updateScaleTexture(
                 newParameters.scale,
                 newParameters.sampleRate,
-                newParameters.windowSize
+                newParameters.windowSize,
             );
             this.currentScaleRange = this.scaleRange;
         }
@@ -321,7 +297,7 @@ export class SpectrogramGPURenderer {
 
     public updateSpectrogram(
         circular2dQueue: Circular2DBuffer<Float32Array>,
-        forceFullRender: boolean = false
+        forceFullRender: boolean = false,
     ) {
         this.ctx.bindTexture(this.ctx.TEXTURE_2D, this.spectrogramTexture);
 
@@ -335,7 +311,7 @@ export class SpectrogramGPURenderer {
                 0,
                 this.ctx.LUMINANCE,
                 this.ctx.FLOAT,
-                circular2dQueue.data
+                circular2dQueue.data,
             );
         } else if (circular2dQueue.start !== this.lastSpectrogramStart) {
             if (circular2dQueue.start >= this.lastSpectrogramStart) {
@@ -343,20 +319,20 @@ export class SpectrogramGPURenderer {
                     circular2dQueue.height,
                     circular2dQueue.start - this.lastSpectrogramStart,
                     this.lastSpectrogramStart,
-                    circular2dQueue.data
+                    circular2dQueue.data,
                 );
             } else {
                 this.updateSpectrogramPartial(
                     circular2dQueue.height,
                     circular2dQueue.start,
                     0,
-                    circular2dQueue.data
+                    circular2dQueue.data,
                 );
                 this.updateSpectrogramPartial(
                     circular2dQueue.height,
                     circular2dQueue.width - this.lastSpectrogramStart,
                     this.lastSpectrogramStart,
-                    circular2dQueue.data
+                    circular2dQueue.data,
                 );
             }
         } else if (circular2dQueue.length > this.lastSpectrogramLength) {
@@ -364,22 +340,22 @@ export class SpectrogramGPURenderer {
                 circular2dQueue.height,
                 circular2dQueue.length - this.lastSpectrogramLength,
                 this.lastSpectrogramLength,
-                circular2dQueue.data
+                circular2dQueue.data,
             );
         }
 
         this.lastSpectrogramLength = circular2dQueue.length;
         this.lastSpectrogramStart = circular2dQueue.start;
         this.spectrogramOffset = circular2dQueue.start / circular2dQueue.width;
-        this.spectrogramLength =
-            -0.5 / circular2dQueue.width + circular2dQueue.length / circular2dQueue.width;
+        this.spectrogramLength = -0.5 / circular2dQueue.width +
+            circular2dQueue.length / circular2dQueue.width;
     }
 
     private updateSpectrogramPartial(
         width: number,
         height: number,
         dataStart: number,
-        data: Float32Array
+        data: Float32Array,
     ) {
         this.ctx.texSubImage2D(
             this.ctx.TEXTURE_2D,
@@ -390,7 +366,7 @@ export class SpectrogramGPURenderer {
             height,
             this.ctx.LUMINANCE,
             this.ctx.FLOAT,
-            data.subarray(dataStart * width, (dataStart + height) * width)
+            data.subarray(dataStart * width, (dataStart + height) * width),
         );
     }
 
@@ -479,14 +455,14 @@ export class SpectrogramGPURenderer {
                 1.0,
                 0.0,
             ]),
-            this.ctx.STATIC_DRAW
+            this.ctx.STATIC_DRAW,
         );
 
         this.ctx.bindBuffer(this.ctx.ELEMENT_ARRAY_BUFFER, indexBuffer);
         this.ctx.bufferData(
             this.ctx.ELEMENT_ARRAY_BUFFER,
             new Uint16Array([0, 1, 3, 2, 3, 1]),
-            this.ctx.STATIC_DRAW
+            this.ctx.STATIC_DRAW,
         );
 
         return [vertexBuffer, indexBuffer];
@@ -509,17 +485,17 @@ export class SpectrogramGPURenderer {
             0,
             this.ctx.LUMINANCE,
             this.ctx.FLOAT,
-            new Float32Array(width * height)
+            new Float32Array(width * height),
         );
         this.ctx.texParameteri(
             this.ctx.TEXTURE_2D,
             this.ctx.TEXTURE_WRAP_S,
-            this.ctx.CLAMP_TO_EDGE
+            this.ctx.CLAMP_TO_EDGE,
         );
         this.ctx.texParameteri(
             this.ctx.TEXTURE_2D,
             this.ctx.TEXTURE_WRAP_T,
-            this.ctx.CLAMP_TO_EDGE
+            this.ctx.CLAMP_TO_EDGE,
         );
         this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.LINEAR);
         this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.LINEAR);
@@ -532,7 +508,7 @@ export class SpectrogramGPURenderer {
         minFrequencyHz: number,
         maxFrequencyHz: number,
         sampleRate: number,
-        windowSize: number
+        windowSize: number,
     ) {
         const peakHz = (sampleRate * (windowSize - 2)) / (2 * windowSize);
         switch (scale) {
@@ -587,17 +563,17 @@ export class SpectrogramGPURenderer {
             0,
             this.ctx.LUMINANCE,
             this.ctx.FLOAT,
-            buffer
+            buffer,
         );
         this.ctx.texParameteri(
             this.ctx.TEXTURE_2D,
             this.ctx.TEXTURE_WRAP_S,
-            this.ctx.CLAMP_TO_EDGE
+            this.ctx.CLAMP_TO_EDGE,
         );
         this.ctx.texParameteri(
             this.ctx.TEXTURE_2D,
             this.ctx.TEXTURE_WRAP_T,
-            this.ctx.CLAMP_TO_EDGE
+            this.ctx.CLAMP_TO_EDGE,
         );
         this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.LINEAR);
         this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.LINEAR);
@@ -630,17 +606,17 @@ export class SpectrogramGPURenderer {
             0,
             this.ctx.RGB,
             this.ctx.UNSIGNED_BYTE,
-            buffer
+            buffer,
         );
         this.ctx.texParameteri(
             this.ctx.TEXTURE_2D,
             this.ctx.TEXTURE_WRAP_S,
-            this.ctx.CLAMP_TO_EDGE
+            this.ctx.CLAMP_TO_EDGE,
         );
         this.ctx.texParameteri(
             this.ctx.TEXTURE_2D,
             this.ctx.TEXTURE_WRAP_T,
-            this.ctx.CLAMP_TO_EDGE
+            this.ctx.CLAMP_TO_EDGE,
         );
         this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MIN_FILTER, this.ctx.LINEAR);
         this.ctx.texParameteri(this.ctx.TEXTURE_2D, this.ctx.TEXTURE_MAG_FILTER, this.ctx.LINEAR);

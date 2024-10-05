@@ -1,18 +1,27 @@
-import { SpectrogramOptions, SpectrogramResult } from './spectrogram';
-import { ACTION_COMPUTE_SPECTROGRAM, ComputeSpectrogramMessage, Message } from './worker-constants';
-// eslint-disable-next-line import/extensions
-import HelperWorker from './workers/helper.worker.ts';
+import { SpectrogramOptions, SpectrogramResult } from './spectrogram.ts';
+import {
+    ACTION_COMPUTE_SPECTROGRAM,
+    ComputeSpectrogramMessage,
+    Message,
+} from './worker-constants.ts';
+// import Worker from './workers/helper.worker.ts?worker';
 
-const WORKER_QUEUE: ((worker: HelperWorker) => void)[] = [];
-const WORKER_POOL: { worker: HelperWorker; busy: boolean }[] = [];
-for (let i = 0; i < (window.navigator.hardwareConcurrency || 4); i += 1) {
+const WORKER_QUEUE: ((worker: Worker) => void)[] = [];
+const WORKER_POOL: { worker: Worker; busy: boolean }[] = [];
+
+for (let i = 0; i < (navigator.hardwareConcurrency || 4); i += 1) {
+    const worker = new Worker(
+        // import.meta.resolve('./workers/helper.worker.ts'),
+        new URL('./workers/helper.worker.ts', import.meta.url),
+        { type: 'module' },
+    );
     WORKER_POOL.push({
-        worker: new HelperWorker(),
+        worker,
         busy: false,
     });
 }
 
-function getFreeWorker(): Promise<HelperWorker> {
+function getFreeWorker(): Promise<Worker> {
     const workerData = WORKER_POOL.find((w) => !w.busy);
     if (workerData !== undefined) {
         workerData.busy = true;
@@ -23,7 +32,7 @@ function getFreeWorker(): Promise<HelperWorker> {
     });
 }
 
-function releaseWorker(worker: HelperWorker) {
+function releaseWorker(worker: Worker) {
     const workerData = WORKER_POOL.find((w) => w.worker === worker);
     if (workerData === undefined) {
         throw new Error('Provided worker to release is not valid');
@@ -41,7 +50,7 @@ function releaseWorker(worker: HelperWorker) {
 function queueTask<T extends Message>(
     action: T['request']['action'],
     payload: T['request']['payload'],
-    transfer: Transferable[]
+    transfer: Transferable[],
 ): Promise<Required<T['response']>['payload']> {
     return new Promise((resolve, reject) => {
         getFreeWorker().then((worker) => {
@@ -63,7 +72,7 @@ function queueTask<T extends Message>(
                     action,
                     payload,
                 },
-                transfer
+                transfer,
             );
         });
     });
@@ -77,7 +86,7 @@ export async function offThreadGenerateSpectrogram(
     samples: Float32Array,
     samplesStart: number,
     samplesLength: number,
-    options: SpectrogramOptions
+    options: SpectrogramOptions,
 ): Promise<SpectrogramResult & { input: Float32Array }> {
     const {
         spectrogramWindowCount,
@@ -92,7 +101,7 @@ export async function offThreadGenerateSpectrogram(
             samplesLength,
             options,
         },
-        [samples.buffer]
+        [samples.buffer],
     );
 
     return {

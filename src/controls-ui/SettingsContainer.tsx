@@ -11,7 +11,7 @@ import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography';
 import pink from '@material-ui/core/colors/pink';
-import { ThemeProvider, createMuiTheme, makeStyles } from '@material-ui/core/styles';
+import { ThemeProvider, createTheme, makeStyles } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import AudiotrackIcon from '@material-ui/icons/Audiotrack';
 import ClearIcon from '@material-ui/icons/Clear';
@@ -29,14 +29,14 @@ import React, {
     useCallback,
 } from 'react';
 
-import { GRADIENTS } from '../color-util';
-import { hzToMel, melToHz } from '../math-util';
-import { Scale } from '../spectrogram';
-import { RenderParameters } from '../spectrogram-render';
+import { GRADIENTS } from "../color-util.ts";
+import { hzToMel, melToHz } from "../math-util.ts";
+import { Scale } from "../spectrogram.ts";
+import { RenderParameters } from "../spectrogram-render.ts";
 
-import generateLabelledSlider from './LabelledSlider';
+import generateLabelledSlider from "./LabelledSlider.tsx";
 
-const controlsTheme = createMuiTheme({
+const controlsTheme = createTheme({
     palette: {
         type: 'dark',
         background: {
@@ -46,7 +46,7 @@ const controlsTheme = createMuiTheme({
         primary: {
             main: '#ffffff',
         },
-        secondary: pink,
+        // secondary: pink,
     },
 });
 

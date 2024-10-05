@@ -1,9 +1,12 @@
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import debounce from 'lodash.debounce';
 
-import initialiseControlsUi from './controls-ui';
-import { Circular2DBuffer } from './math-util';
-import { SpectrogramGPURenderer, RenderParameters } from './spectrogram-render';
-import { offThreadGenerateSpectrogram } from './worker-util';
+import initialiseControlsUi from './controls-ui/index.tsx';
+import { Circular2DBuffer } from './math-util.ts';
+import { RenderParameters, SpectrogramGPURenderer } from './spectrogram-render.ts';
+import { offThreadGenerateSpectrogram } from './worker-util.ts';
 
 const SPECTROGRAM_WINDOW_SIZE = 4096;
 const SPECTROGRAM_WINDOW_OVERLAP = 1024;
@@ -45,14 +48,14 @@ async function startRenderingSpectrogram(): Promise<{
             Float32Array,
             canvas.parentElement.offsetWidth,
             SPECTROGRAM_WINDOW_SIZE / 2,
-            1
+            1,
         );
         spectrogramBuffers.push(spectrogramBuffer);
 
         const renderer = new SpectrogramGPURenderer(
             canvas,
             spectrogramBuffer.width,
-            spectrogramBuffer.height
+            spectrogramBuffer.height,
         );
         renderer.resizeCanvas(canvas.parentElement.offsetWidth, canvas.parentElement.offsetHeight);
         renderers.push(renderer);
@@ -75,7 +78,7 @@ async function startRenderingSpectrogram(): Promise<{
                 imageDirty = true;
 
                 return spectrogram.input;
-            }
+            },
         );
 
         // Trigger a render on each frame only if we have new spectrogram data to display
@@ -99,15 +102,15 @@ async function startRenderingSpectrogram(): Promise<{
             spectrogramBuffers[i].resizeWidth(canvas.parentElement.offsetWidth);
             renderers[i].resizeCanvas(
                 canvas.parentElement.offsetWidth,
-                canvas.parentElement.offsetHeight
+                canvas.parentElement.offsetHeight,
             );
             renderers[i].updateSpectrogram(spectrogramBuffers[i]);
         });
     }, 250);
-    window.addEventListener('resize', resizeHandler);
+    globalThis.addEventListener('resize', resizeHandler);
 
     // Make sure the canvas still displays properly in the middle of a resize
-    window.addEventListener('resize', () => {
+    globalThis.addEventListener('resize', () => {
         spectrogramCanvases.forEach((canvas, i) => {
             if (canvas === null || canvas.parentElement === null) {
                 return;
@@ -115,7 +118,7 @@ async function startRenderingSpectrogram(): Promise<{
 
             renderers[i].fastResizeCanvas(
                 canvas.parentElement.offsetWidth,
-                canvas.parentElement.offsetHeight
+                canvas.parentElement.offsetHeight,
             );
         });
     });
@@ -139,7 +142,7 @@ async function startRenderingSpectrogram(): Promise<{
 
 async function setupSpectrogramFromMicrophone(
     audioCtx: AudioContext,
-    bufferCallback: (bufferData: SpectrogramBufferData[]) => Promise<Float32Array[]>
+    bufferCallback: (bufferData: SpectrogramBufferData[]) => Promise<Float32Array[]>,
 ) {
     const CHANNELS = 2;
     const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -148,7 +151,7 @@ async function setupSpectrogramFromMicrophone(
     const processor = audioCtx.createScriptProcessor(
         SPECTROGRAM_WINDOW_OVERLAP,
         CHANNELS,
-        CHANNELS
+        CHANNELS,
     );
 
     // An array of the last received audio buffers for each channel
@@ -182,7 +185,7 @@ async function setupSpectrogramFromMicrophone(
             // Delete the oldest buffers that aren't needed any more for the next render
             channelBuffers[i].splice(
                 0,
-                channelBuffers[i].length - SPECTROGRAM_WINDOW_SIZE / SPECTROGRAM_WINDOW_OVERLAP + 1
+                channelBuffers[i].length - SPECTROGRAM_WINDOW_SIZE / SPECTROGRAM_WINDOW_OVERLAP + 1,
             );
         }
 
@@ -195,7 +198,7 @@ async function setupSpectrogramFromMicrophone(
                     length: buffer.length,
                     sampleRate: sampleRate!,
                     isStart,
-                }))
+                })),
             );
             bufferCallbackPromise.then(() => {
                 bufferCallbackPromise = null;
@@ -233,13 +236,13 @@ async function setupSpectrogramFromAudioFile(
     audioCtx: AudioContext,
     arrayBuffer: ArrayBuffer,
     bufferCallback: (bufferData: SpectrogramBufferData[]) => Promise<Float32Array[]>,
-    audioEndCallback: () => void
+    audioEndCallback: () => void,
 ) {
     const audioBuffer = await new Promise<AudioBuffer>((resolve, reject) =>
         audioCtx.decodeAudioData(
             arrayBuffer,
             (buffer) => resolve(buffer),
-            (err) => reject(err)
+            (err) => reject(err),
         )
     );
 
@@ -275,15 +278,15 @@ async function setupSpectrogramFromAudioFile(
                 });
             }
 
-            nextSample =
-                nextSample + totalSamples - SPECTROGRAM_WINDOW_SIZE + SPECTROGRAM_WINDOW_OVERLAP;
+            nextSample = nextSample + totalSamples - SPECTROGRAM_WINDOW_SIZE +
+                SPECTROGRAM_WINDOW_OVERLAP;
             channelData = await bufferCallback(bufferCallbackData);
         }
 
         if (!isStopping && duration / audioBuffer.duration < 1.0) {
             setTimeout(
                 audioEventCallback,
-                ((SPECTROGRAM_WINDOW_OVERLAP / audioBuffer.sampleRate) * 1000) / 2
+                ((SPECTROGRAM_WINDOW_OVERLAP / audioBuffer.sampleRate) * 1000) / 2,
             );
         } else {
             source.disconnect(audioCtx.destination);
@@ -330,28 +333,31 @@ let globalAudioCtx: AudioContext | null = null;
             },
             renderFromMicrophoneCallback: () => {
                 if (globalAudioCtx === null) {
-                    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    globalAudioCtx = new (globalThis.AudioContext)();
                 }
                 setupSpectrogramFromMicrophone(globalAudioCtx, bufferCallback).then(
                     (callback) => {
                         stopCallback = callback;
                         setPlayState('playing');
                     },
-                    () => setPlayState('stopped')
+                    () => setPlayState('stopped'),
                 );
             },
             renderFromFileCallback: (file: ArrayBuffer) => {
                 if (globalAudioCtx === null) {
-                    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    globalAudioCtx = new (globalThis.AudioContext)();
                 }
-                setupSpectrogramFromAudioFile(globalAudioCtx, file, bufferCallback, () =>
-                    setPlayState('stopped')
+                setupSpectrogramFromAudioFile(
+                    globalAudioCtx,
+                    file,
+                    bufferCallback,
+                    () => setPlayState('stopped'),
                 ).then(
                     (callback) => {
                         stopCallback = callback;
                         setPlayState('playing');
                     },
-                    () => setPlayState('stopped')
+                    () => setPlayState('stopped'),
                 );
             },
         });

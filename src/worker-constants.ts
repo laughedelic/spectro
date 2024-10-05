@@ -1,4 +1,4 @@
-import { SpectrogramOptions } from './spectrogram';
+import { SpectrogramOptions } from './spectrogram.ts';
 
 export const ACTION_COMPUTE_SPECTROGRAM = 'spectrogram-compute';
 
