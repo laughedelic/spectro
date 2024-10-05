@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { RenderParameters } from "../spectrogram-render.ts";
 
@@ -17,15 +17,15 @@ export default function initialiseControlsUi(
 ) {
     const [SettingsContainer, setPlayState] = generateSettingsContainer();
 
-    ReactDOM.render(
+    const root = createRoot(container!);
+    root.render(
         <SettingsContainer
             onStop={props.stopCallback}
             onClearSpectrogram={props.clearSpectrogramCallback}
             onRenderParametersUpdate={props.renderParametersUpdateCallback}
             onRenderFromMicrophone={props.renderFromMicrophoneCallback}
             onRenderFromFile={props.renderFromFileCallback}
-        />,
-        container
+        />
     );
 
     return setPlayState;

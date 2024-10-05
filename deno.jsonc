@@ -3,7 +3,7 @@
     // "target": "esnext",
     "lib": [
       "dom",
-      "dom.iterable",
+      "dom.iterable"
       // "dom.asynciterable",
       // "deno.ns"
     ],
@@ -17,15 +17,14 @@
     "preview": "deno run -A npm:vite preview"
   },
   "imports": {
-    "@material-ui/core": "npm:@material-ui/core@^4.11.3",
-    "@material-ui/icons": "npm:@material-ui/icons@^4.11.3",
-    // "@mui/icons-material": "npm:@mui/icons-material@^6.1.2",
-    // "@mui/material": "npm:@mui/material@^6.1.2",
+    "@mui/icons-material": "npm:@mui/icons-material@^6.1.2",
+    "@mui/material": "npm:@mui/material@^6.1.2",
     "@vitejs/plugin-react": "npm:@vitejs/plugin-react@^4.3.2",
     "jsfft": "npm:jsfft@^0.0.4",
     "lodash.debounce": "npm:lodash.debounce@^4.0.8",
     "react": "npm:react@^18.3.1",
     "react-dom": "npm:react-dom@^18.3.1",
+    "tss-react": "npm:tss-react@^4.9.13",
     "vite": "npm:vite@^5.4.8",
     "vite-plugin-glsl": "npm:vite-plugin-glsl@^1.3.0"
   },

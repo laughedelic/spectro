@@ -1,9 +1,9 @@
-import Slider from '@material-ui/core/Slider';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
+import Slider from '@mui/material/Slider';
+import Typography from '@mui/material/Typography';
+import { makeStyles } from 'tss-react/mui';
 import React, { ChangeEvent, useCallback, useRef, useEffect } from 'react';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles()(() => ({
     sliderLabelContainer: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -61,7 +61,7 @@ function generateLabelledSlider(): [LabelledSlider, (value: string) => void] {
         defaultValue,
         onChange,
     }: LabelledSliderProps) => {
-        const classes = useStyles();
+        const { classes } = useStyles();
 
         const valueLabelRef = useRef<HTMLSpanElement | null>(null);
         useEffect(() => {
