@@ -1,6 +1,4 @@
-// @ts-types="vite-plugin-glsl/ext.d.ts"
 import FragmentShader from './shaders/fragment.glsl?raw';
-// @ts-types="vite-plugin-glsl/ext.d.ts"
 import VertexShader from './shaders/vertex.glsl?raw';
 
 import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from './color-util.ts';
